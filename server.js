@@ -26,12 +26,30 @@ app.post('/create-payment', async (req, res) => {
     NotificationURL: 'https://твой-сервер-на-render.com/webhook'
   };
 
-  // Тут нужно сгенерировать Token.
-  // В официальной документации Т-Банка есть алгоритм.
-  // Для простоты пока оставляем пустым, но в проде это обязательно!
-  // const token = generateToken(data, PASSWORD);
-  // data.Token = token;
+function generateToken(data, password) {
+  // 1. Создаём копию объекта, исключаем Token, TerminalKey и другие служебные поля
+  const params = { ...data };
+  // Если вдруг Token уже есть, удаляем его
+  delete params.Token;
 
+  // 2. Сортируем ключи в алфавитном порядке
+  const sortedKeys = Object.keys(params).sort();
+
+  // 3. Собираем строку вида key=value&key2=value2
+  const tokenString = sortedKeys
+    .map(key => `${key}=${params[key]}`)
+    .join('&');
+
+  // 4. Добавляем пароль в конец
+  const tokenWithPassword = `${tokenString}${password}`;
+
+  // 5. Вычисляем SHA-256 и приводим к нижнему регистру
+  const hash = crypto.createHash('sha256');
+  hash.update(tokenWithPassword);
+  return hash.digest('hex').toLowerCase();
+}
+const token = generateToken(data, PASSWORD);
+data.Token = token;
   try {
     const response = await axios.post('https://securepay.tinkoff.ru/v2/Init', data);
     console.log('T-Bank response:', response.data);
