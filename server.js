@@ -9,8 +9,8 @@ app.use(cors());
 
 // --- ЗДЕСЬ ТВОИ КЛЮЧИ (на время теста) ---
 // В боевом варианте они должны быть в переменных окружения!
-const TERMINAL_KEY = 'ТВОЙ_ТЕРМИНАЛЬНЫЙ_КЛЮЧ';
-const PASSWORD = 'ТВОЙ_ПАРОЛЬ_ОТ_Т-БАНКА';
+const TERMINAL_KEY = process.env.TERMINAL_KEY;;
+const PASSWORD = process.env.PASSWORD;';
 // ---
 app.post('/create-payment', async (req, res) => {
   const { productId, amount } = req.body;
@@ -18,7 +18,7 @@ app.post('/create-payment', async (req, res) => {
   const orderId = crypto.randomUUID();
   const data = {
     TerminalKey: TERMINAL_KEY,
-    Amount: amount * 100, // В КОПЕЙКАХ
+    Amount: amount * 100,
     OrderId: orderId,
     Description: `Покупка ${productId}`,
     SuccessURL: 'https://твой-сервер-на-render.com/success',
