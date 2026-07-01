@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 
 app.use(express.json());
@@ -80,6 +81,10 @@ app.post('/webhook', (req, res) => {
 });
 app.get('/health', (req, res) => {
   res.status(200).send('Server is running');
+});
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
