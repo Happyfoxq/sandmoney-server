@@ -5,14 +5,41 @@ const cors = require('cors');
 const path = require('path');
 const app = express();
 
+// ================================================
+// БЛОК 1: Базовая настройка сервера
+// ================================================
 app.use(express.json());
 app.use(cors());
 
-// --- ЗДЕСЬ ТВОИ КЛЮЧИ (на время теста) ---
-// В боевом варианте они должны быть в переменных окружения!
+// ================================================
+// БЛОК 2: Steam-авторизация
+// ================================================
+// Отправляет пользователя в Steam для входа
+app.get('/api/steam-auth', (req, res) => {
+    const steamLoginUrl = `https://steamcommunity.com/openid/login?` +
+        `openid.ns=http://specs.openid.net/auth/2.0&` +
+        `openid.identity=http://specs.openid.net/auth/2.0/identifier_select&` +
+        `openid.return_to=https://sandmoney-server.onrender.com/api/steam-callback&` +
+        `openid.realm=https://sandmoney-server.onrender.com&` +
+        `openid.mode=checkid_setup`;
+    res.redirect(steamLoginUrl);
+});
+
+// Возврат от Steam после логина
+app.get('/api/steam-callback', (req, res) => {
+    // Здесь будет логика обработки возврата от Steam
+    res.send('Вы вернулись от Steam!');
+});
+
+// ================================================
+// БЛОК 3: Ключи для T‑Банка (пока из переменных окружения)
+// ================================================
 const TERMINAL_KEY = process.env.TERMINAL_KEY;
 const PASSWORD = process.env.PASSWORD;
-// ---
+
+// ================================================
+// БЛОК 4: Создание платежа
+// ================================================
 app.post('/create-payment', async (req, res) => {
   const { productId, amount } = req.body;
   console.log(`Creating payment for ${productId}, amount ${amount}`);
@@ -27,30 +54,30 @@ app.post('/create-payment', async (req, res) => {
     NotificationURL: 'https://твой-сервер-на-render.com/webhook'
   };
 
-function generateToken(data, password) {
-  // 1. Создаём копию объекта, исключаем Token, TerminalKey и другие служебные поля
-  const params = { ...data };
-  // Если вдруг Token уже есть, удаляем его
-  delete params.Token;
+  // ================================================
+  // ВЛОЖЕННЫЙ БЛОК: Генерация токена
+  // ================================================
+  function generateToken(data, password) {
+    const params = { ...data };
+    delete params.Token;
 
-  // 2. Сортируем ключи в алфавитном порядке
-  const sortedKeys = Object.keys(params).sort();
+    const sortedKeys = Object.keys(params).sort();
+    const tokenString = sortedKeys
+      .map(key => `${key}=${params[key]}`)
+      .join('&');
 
-  // 3. Собираем строку вида key=value&key2=value2
-  const tokenString = sortedKeys
-    .map(key => `${key}=${params[key]}`)
-    .join('&');
+    const tokenWithPassword = `${tokenString}${password}`;
+    const hash = crypto.createHash('sha256');
+    hash.update(tokenWithPassword);
+    return hash.digest('hex').toLowerCase();
+  }
 
-  // 4. Добавляем пароль в конец
-  const tokenWithPassword = `${tokenString}${password}`;
+  const token = generateToken(data, PASSWORD);
+  data.Token = token;
 
-  // 5. Вычисляем SHA-256 и приводим к нижнему регистру
-  const hash = crypto.createHash('sha256');
-  hash.update(tokenWithPassword);
-  return hash.digest('hex').toLowerCase();
-}
-const token = generateToken(data, PASSWORD);
-data.Token = token;
+  // ================================================
+  // ВЛОЖЕННЫЙ БЛОК: Запрос к T‑Банку
+  // ================================================
   try {
     const response = await axios.post('https://securepay.tinkoff.ru/v2/Init', data);
     console.log('T-Bank response:', response.data);
@@ -75,17 +102,33 @@ data.Token = token;
     });
   }
 });
+
+// ================================================
+// БЛОК 5: Вебхук от T‑Банка
+// ================================================
 app.post('/webhook', (req, res) => {
   console.log('Webhook received:', req.body);
   res.status(200).send('OK');
 });
+
+// ================================================
+// БЛОК 6: Проверка здоровья сервера
+// ================================================
 app.get('/health', (req, res) => {
   res.status(200).send('Server is running');
 });
+
+// ================================================
+// БЛОК 7: Статические файлы (HTML, CSS, JS)
+// ================================================
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public','site.html'));
+    res.sendFile(path.join(__dirname, 'public', 'site.html'));
 });
+
+// ================================================
+// БЛОК 8: Запуск сервера
+// ================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`S&Money server running on port ${PORT}`);
