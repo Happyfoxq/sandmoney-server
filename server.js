@@ -9,8 +9,8 @@ app.use(cors());
 
 // --- ЗДЕСЬ ТВОИ КЛЮЧИ (на время теста) ---
 // В боевом варианте они должны быть в переменных окружения!
-const TERMINAL_KEY = process.env.TERMINAL_KEY;;
-const PASSWORD = process.env.PASSWORD;';
+const TERMINAL_KEY = process.env.TERMINAL_KEY;
+const PASSWORD = process.env.PASSWORD;
 // ---
 app.post('/create-payment', async (req, res) => {
   const { productId, amount } = req.body;
