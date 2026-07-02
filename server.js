@@ -27,11 +27,22 @@ app.get('/api/steam-auth', (req, res) => {
 });
 
 app.get('/api/steam-callback', (req, res) => {
-    // Получаем SteamID из параметров
+ console.log('Steam callback received. Full query:', req.query);
+    console.log('Steam callback received. Full params:', req.params);
+    
     const claimedId = req.query['openid_claimed_id'];
+    console.log('Claimed ID:', claimedId);
+    
     if (!claimedId) {
-        return res.send('Ошибка входа. Попробуйте снова.');
-    }
+        console.log('No claimedId found, checking other keys...');
+        // Проверяем, может быть данные в другом поле
+        const identity = req.query['openid.identity'];
+        console.log('openid.identity:', identity);
+        
+        if (!identity) {
+            return res.send('Ошибка входа. Попробуйте снова.');
+        }
+        // Используем identity, если оно есть
 
     // Извлекаем SteamID64 из URL
     const steamId = claimedId.split('/').pop();
