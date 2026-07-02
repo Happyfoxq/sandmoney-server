@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const cors = require('cors');
 const path = require('path');
 const app = express();
+const users = {};
 
 // ================================================
 // БЛОК 1: Базовая настройка сервера
@@ -39,7 +40,12 @@ app.get('/api/steam-callback', (req, res) => {
     // Для простоты пока используем объект в памяти
     const user = { steamId: steamId, name: `Steam User ${steamId.slice(-6)}` };
     
-    // Здесь можно сохранить пользователя в базу данных
+    users[steamId] = {
+    steamId: steamId,
+    name: `Steam User ${steamId.slice(-6)}`,
+    balance: 0,
+    transactions: []
+    };
     
     // Отправляем ответ или перенаправляем на главную страницу
     res.send(`
