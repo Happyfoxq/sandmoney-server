@@ -5,7 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const app = express();
 const users = {};
-
+const STEAM_API_KEY = process.env.STEAM_API_KEY;
 // ================================================
 // БЛОК 1: Базовая настройка сервера
 // ================================================
