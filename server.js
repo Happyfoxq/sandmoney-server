@@ -25,10 +25,28 @@ app.get('/api/steam-auth', (req, res) => {
     res.redirect(steamLoginUrl);
 });
 
-// Возврат от Steam после логина
 app.get('/api/steam-callback', (req, res) => {
-    // Здесь будет логика обработки возврата от Steam
-    res.send('Вы вернулись от Steam!');
+    // Получаем SteamID из параметров
+    const claimedId = req.query['openid_claimed_id'];
+    if (!claimedId) {
+        return res.send('Ошибка входа. Попробуйте снова.');
+    }
+
+    // Извлекаем SteamID64 из URL
+    const steamId = claimedId.split('/').pop();
+    
+    // Сохраняем ID в сессии (или в БД)
+    // Для простоты пока используем объект в памяти
+    const user = { steamId: steamId, name: `Steam User ${steamId.slice(-6)}` };
+    
+    // Здесь можно сохранить пользователя в базу данных
+    
+    // Отправляем ответ или перенаправляем на главную страницу
+    res.send(`
+        <h1>Вы вошли как ${user.name}</h1>
+        <p>Ваш Steam ID: ${user.steamId}</p>
+        <a href="/">Вернуться на главную</a>
+    `);
 });
 
 // ================================================
