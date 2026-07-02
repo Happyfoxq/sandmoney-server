@@ -4,8 +4,31 @@
     <title>S&Money - Личный кабинет разработчика</title>
 </head>
 <body>
-    <h1>Добро пожаловать в S&Money!</h1>
-    <p>Что бы пользоваться S&Money нужно войти в аккаунт.</p>
-    <button onclick="location.href='/api/steam-auth'">Войти через Steam</button>
+    <div id="app">
+        <h1>Добро пожаловать в S&Money!</h1>
+        <div id="login-section">
+            <p>Чтобы пользоваться S&Money, нужно войти в аккаунт.</p>
+            <button onclick="location.href='/api/steam-auth'">Войти через Steam</button>
+        </div>
+        <div id="dashboard-section" style="display:none;">
+            <h2>Привет, <span id="user-name"></span>!</h2>
+            <p>Ваш баланс: <span id="user-balance">0</span> ₽</p>
+            <button onclick="location.href='/logout'">Выйти</button>
+        </div>
+    </div>
+    <script>
+        // Проверка, вошёл ли пользователь
+        fetch('/api/me')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.steamId) {
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('dashboard-section').style.display = 'block';
+                    document.getElementById('user-name').textContent = data.name;
+                    document.getElementById('user-balance').textContent = data.balance;
+                }
+            })
+            .catch(() => console.log('Пользователь не авторизован'));
+    </script>
 </body>
 </html>
