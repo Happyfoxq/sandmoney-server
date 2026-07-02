@@ -27,41 +27,41 @@ app.get('/api/steam-auth', (req, res) => {
 });
 
 app.get('/api/steam-callback', (req, res) => {
- console.log('Steam callback received. Full query:', req.query);
+    console.log('Steam callback received. Full query:', req.query);
     console.log('Steam callback received. Full params:', req.params);
-    
+
     const claimedId = req.query['openid_claimed_id'];
     console.log('Claimed ID:', claimedId);
-    
-    if (!claimedId) {
+
+    let steamId = null;
+
+    if (claimedId) {
+        steamId = claimedId.split('/').pop();
+    } else {
         console.log('No claimedId found, checking other keys...');
-        // Проверяем, может быть данные в другом поле
         const identity = req.query['openid.identity'];
         console.log('openid.identity:', identity);
-        
-        if (!identity) {
-            return res.send('Ошибка входа. Попробуйте снова.');
+        if (identity) {
+            steamId = identity.split('/').pop();
         }
-        // Используем identity, если оно есть
+    }
 
-    // Извлекаем SteamID64 из URL
-    const steamId = claimedId.split('/').pop();
-    
-    // Сохраняем ID в сессии (или в БД)
-    // Для простоты пока используем объект в памяти
-    const user = { steamId: steamId, name: `Steam User ${steamId.slice(-6)}` };
-    
+    if (!steamId) {
+        return res.send('Ошибка входа. Попробуйте снова.');
+    }
+
+    // Сохраняем пользователя
     users[steamId] = {
-    steamId: steamId,
-    name: `Steam User ${steamId.slice(-6)}`,
-    balance: 0,
-    transactions: []
+        steamId: steamId,
+        name: `Steam User ${steamId.slice(-6)}`,
+        balance: 0,
+        transactions: []
     };
-    
-    // Отправляем ответ или перенаправляем на главную страницу
+
     res.send(`
-        <h1>Вы вошли как ${user.name}</h1>
-        <p>Ваш Steam ID: ${user.steamId}</p>
+        <h1>✅ Вход выполнен успешно!</h1>
+        <p>Ваш Steam ID: ${steamId}</p>
+        <p>Имя: ${users[steamId].name}</p>
         <a href="/">Вернуться на главную</a>
     `);
 });
