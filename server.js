@@ -142,8 +142,20 @@ app.post('/create-payment', async (req, res) => {
 // БЛОК 5: Вебхук от T‑Банка
 // ================================================
 app.post('/webhook', (req, res) => {
-  console.log('Webhook received:', req.body);
-  res.status(200).send('OK');
+    const { OrderId, Status, PaymentId, Amount } = req.body;
+    console.log('Webhook received:', req.body);
+
+    // Проверяем статус платежа
+    if (Status === 'CONFIRMED' || Status === 'AUTHORIZED') {
+        // Обновляем статус заказа в базе данных
+        // Например: transactions[OrderId] = { status: 'paid', amount: Amount };
+        console.log(`✅ Платеж ${OrderId} успешно подтвержден!`);
+    } else if (Status === 'REJECTED' || Status === 'CANCELED') {
+        console.log(`❌ Платеж ${OrderId} отклонен или отменен.`);
+    }
+
+    // Всегда отвечаем 200 OK, чтобы Т-Банк не отправлял повторно
+    res.status(200).send('OK');
 });
 
 // ================================================
